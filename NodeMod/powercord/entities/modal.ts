@@ -1,0 +1,1 @@
+export { modal } from "@vizality/index";

@@ -1,5 +1,4 @@
-import entities, { Plugin as vzPlugin } from "@vizality/entities";
-import { createProxy } from "../../../createProxy";
+import { Plugin as vzPlugin } from "@vizality/entities";
 
 //@ts-ignore
 export class Plugin extends vzPlugin {
@@ -11,13 +10,13 @@ export class Plugin extends vzPlugin {
     //@ts-ignore
     get entityID() { return this.addonId }
 
-    loadStyleSheet(...args: any[]) {
+    loadStylesheet(...args: any[]) {
         //@ts-ignore shut up
         return super.injectStyles(...args);
     }
 
     _load (...args: any[]) {
-
+        this.__startPcPlugin()
         //@ts-ignore
         return super._load(...args);
     }

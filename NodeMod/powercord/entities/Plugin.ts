@@ -4,8 +4,8 @@ import { Plugin as vzPlugin } from "@vizality/entities";
 export class Plugin extends vzPlugin {
     pcCompatVersion = "1.0.0";
 
-    private __pcCompatOldStart: any;
-    private __pcCompatOldStop: any;
+    private __pcCompatOldStart: () => void;
+    private __pcCompatOldStop: () => void;
 
     //@ts-ignore
     get entityID() { return this.addonId }

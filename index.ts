@@ -2,6 +2,7 @@ import { Plugin } from "@vizality/entities";
 import { join } from "path";
 import Module from "module";
 import { createProxy } from "./createProxy";
+import { rename } from "fs/promises";
 
 declare var vizality: Vizality;
 
@@ -12,7 +13,10 @@ export default class Powercordulator extends Plugin {
   private fontAwesome = document.createElement('link');
 
   async start() {
-    console.log("pccompat started");
+    if (!__dirname.endsWith('00-powercordulator')) {
+      await rename(__dirname, join(__dirname, '..', '00-powercordulator'));
+      window.location.reload();
+    }
 
     this.fontAwesome.setAttribute('rel', 'stylesheet');
     this.fontAwesome.setAttribute('href', 'https://kit-pro.fontawesome.com/releases/v5.15.1/css/pro.min.css');
@@ -58,7 +62,7 @@ export default class Powercordulator extends Plugin {
         })
       })
     });
-    
+
     this.restoreLocalStorage();
 
     const toReload = this.settings.get('tempDisabled', []);
@@ -83,9 +87,9 @@ export default class Powercordulator extends Plugin {
     frame.remove();
   }
 
-  async stop () {
+  async stop() {
     const tempDisabled = [];
-    for (const [ id, e ] of vizality.manager.plugins._items) {
+    for (const [id, e] of vizality.manager.plugins._items) {
       try {
         if (e.pcCompatVersion !== undefined) {
           if (vizality.manager.plugins.isEnabled(id)) {
@@ -105,6 +109,6 @@ export default class Powercordulator extends Plugin {
     delete (window as any).powercord;
     delete window.localStorage;
     this.fontAwesome.remove();
-    console.log("Goodbye!");
+    this.log("Goodbye!");
   }
 }

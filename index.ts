@@ -1,18 +1,22 @@
-import { Plugin } from "@vizality/entities";
-import { join } from "path";
-import Module from "module";
-import { createProxy } from "./createProxy";
-import { rename } from "fs/promises";
+/* eslint-disable no-restricted-syntax */
+/* eslint-disable no-await-in-loop */
+import { Plugin } from '@vizality/entities';
+import { join } from 'path';
+import Module from 'module';
+import { rename } from 'fs/promises';
+import Notifications from '@vizality/src/src/api/Notifications';
+import { createProxy } from './createProxy';
+import { ToastInfo } from './types';
 
-declare var vizality: Vizality;
+declare let vizality: Vizality;
 
 export default class Powercordulator extends Plugin {
   private settings_regex = /\(.*(\/addons\/plugins\/(.*)\/.*)\)/;
-  private pcModulesPath = join(__dirname, "NodeMod");
+  private pcModulesPath = join(__dirname, 'NodeMod');
 
   private fontAwesome = document.createElement('link');
 
-  async start() {
+  async start () {
     if (!__dirname.endsWith('00-powercordulator')) {
       await rename(__dirname, join(__dirname, '..', '00-powercordulator'));
       window.location.reload();
@@ -28,39 +32,50 @@ export default class Powercordulator extends Plugin {
     (window as any).powercord = createProxy(vizality, {
       pluginManager: createProxy(vizality.manager.plugins, {
         getPlugins: () => vizality.manager.plugins.items,
-        //@ts-ignore
-        get plugins() { return vizality.manager.plugins.items; }
+        // @ts-ignore
+        get plugins () { return vizality.manager.plugins.items; },
       }),
       styleManager: createProxy(vizality.manager.themes, {
         getStyles: () => vizality.manager.themes.items,
-        //@ts-ignore
-        get styles() { return vizality.manager.themes.items; }
+        // @ts-ignore
+        get styles () { return vizality.manager.themes.items; },
       }),
       api: createProxy(vizality.api, {
         settings: createProxy(vizality.api.settings, {
           registerSettings: (addonId, opts) => {
             const register = (vizality.api.settings.registerSettings || vizality.api.settings._registerSettings).bind(vizality.api.settings);
             if (!vizality.manager.plugins.has(addonId)) {
-              [, , addonId] = (new Error()).stack.split('\n').slice(2, 3).pop().match(this.settings_regex);
+              [ , , addonId ] = (new Error()).stack.split('\n').slice(2, 3).pop().match(this.settings_regex);
             }
             return register({
               addonId,
-              ...opts
+              ...opts,
             });
           },
           unregisterSettings: (addonId) => {
             const unregister = (vizality.api.settings.unregisterSettings || vizality.api.settings._unregisterSettings).bind(vizality.api.settings);
             if (!vizality.manager.plugins.has(addonId)) {
-              [, , addonId] = (new Error()).stack.split('\n').slice(2, 3).pop().match(this.settings_regex);
+              [ , , addonId ] = (new Error()).stack.split('\n').slice(2, 3).pop().match(this.settings_regex);
             }
             return unregister(addonId);
-          }
+          },
         }),
         i18n: createProxy(vizality.api.i18n, {
           loadAllStrings: vizality.api.i18n.injectAllStrings,
-          loadStrings: vizality.api.i18n.injectStrings
-        })
-      })
+          loadStrings: vizality.api.i18n.injectStrings,
+        }),
+        // @ts-ignore - undocumented API
+        notices: createProxy(vizality.api.notifications, {
+          sendToast: (id: string, toast: ToastInfo) => {
+            // @ts-ignore
+            vizality.api.notifications.sendToast({
+              id,
+              header: toast.header,
+              content: toast.content,
+            });
+          },
+        }),
+      }),
     });
 
     this.restoreLocalStorage();
@@ -79,17 +94,17 @@ export default class Powercordulator extends Plugin {
     this.settings.delete('tempDisabled', []);
   }
 
-  private restoreLocalStorage() {
-    if (window.localStorage) return
+  private restoreLocalStorage () {
+    if (window.localStorage) return;
     const frame = document.createElement('iframe');
     document.body.appendChild(frame);
     window.localStorage = Object.getOwnPropertyDescriptor(frame.contentWindow, 'localStorage').get.call(window);
     frame.remove();
   }
 
-  async stop() {
+  async stop () {
     const tempDisabled = [];
-    for (const [id, e] of vizality.manager.plugins._items) {
+    for (const [ id, e ] of vizality.manager.plugins._items) {
       try {
         if (e.pcCompatVersion !== undefined) {
           if (vizality.manager.plugins.isEnabled(id)) {
@@ -104,11 +119,11 @@ export default class Powercordulator extends Plugin {
     }
 
     this.settings.set('tempDisabled', tempDisabled);
-    (Module as any).globalPaths = (Module as any).globalPaths.filter(x => x !== this.path);
-    Object.keys(require.cache).filter(x => x.includes('/modules/powercord'))?.forEach((x) => delete require.cache[x]);
+    (Module as any).globalPaths = (Module as any).globalPaths.filter((x) => x !== this.path);
+    Object.keys(require.cache).filter((x) => x.includes('/modules/powercord'))?.forEach((x) => delete require.cache[x]);
     delete (window as any).powercord;
     delete window.localStorage;
     this.fontAwesome.remove();
-    this.log("Goodbye!");
+    this.log('Goodbye!');
   }
 }

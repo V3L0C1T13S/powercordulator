@@ -1,5 +1,6 @@
-import { getModule as vzGetModule, getModules as vzGetModules } from "@vizality/webpack";
-const wp = require("@vizality/webpack");
+import { getModule as vzGetModule, getModules as vzGetModules } from '@vizality/webpack';
+import I18n, { messages } from '@vizality/src/src/api/I18n';
+import * as wp from '@vizality/webpack';
 
 const getModule = (filter: any, retry: boolean = true, forever: boolean = false) => {
   if (filter instanceof Array) {
@@ -10,14 +11,21 @@ const getModule = (filter: any, retry: boolean = true, forever: boolean = false)
 
 const getAllModules = (filter: any) => {
   if (filter instanceof Array) {
-    //@ts-ignore
+    // @ts-ignore
     return vzGetModules(...filter);
   }
   return vzGetModules(filter);
 };
 
-export = {
+const i18n = {
+  Messages: messages,
+};
+
+const webpack = {
   ...wp,
   getModule,
-  getAllModules
+  getAllModules,
+  i18n,
 };
+
+export = webpack;

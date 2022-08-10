@@ -1,6 +1,7 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable max-classes-per-file */
 import { Plugin as vzPlugin } from '@vizality/entities';
+import { VERSION } from '../../../constants';
 
 // Mainly typings for untyped entities
 class vzPluginPrivateMixin extends vzPlugin {
@@ -15,50 +16,50 @@ class vzPluginPrivateMixin extends vzPlugin {
 
 // @ts-ignore
 export class Plugin extends vzPluginPrivateMixin {
-    pcCompatVersion = '1.0.0';
+  pcCompatVersion = VERSION;
 
-    private __pcCompatOldStart: () => void;
-    private __pcCompatOldStop: () => void;
+  private __pcCompatOldStart: () => void;
+  private __pcCompatOldStop: () => void;
 
+  // @ts-ignore
+  get entityID () { return this.addonId; }
+
+  loadStylesheet (path: string) {
+    return this.injectStyles(path);
+  }
+
+  _load (...args: any[]) {
+    this.__startPcPlugin();
     // @ts-ignore
-    get entityID () { return this.addonId; }
+    return super._load(...args);
+  }
 
-    loadStylesheet (path: string) {
-      return super.injectStyles(path);
-    }
+  _unload (...args: any[]) {
+    this.__patchBefore();
+    // @ts-ignore
+    return super._unload(...args);
+  }
 
-    _load (...args: any[]) {
-      this.__startPcPlugin();
-      // @ts-ignore
-      return super._load(...args);
-    }
+  __startPcPlugin (...args: any[]) {
+    this.__patchAfter();
+    return this.startPlugin(...args);
+  }
 
-    _unload (...args: any[]) {
-      this.__patchBefore();
-      // @ts-ignore
-      return super._unload(...args);
-    }
+  __stopPcPlugin (...args: any[]) {
+    this.__patchAfter();
+    return this.pluginWillUnload(...args);
+  }
 
-    __startPcPlugin (...args: any[]) {
-      this.__patchAfter();
-      return this.startPlugin(...args);
-    }
+  /** Dear dperilo, please consider making typings for this. */
+  private __patchBefore () {
+    this.__pcCompatOldStart = this.start;
+    this.__pcCompatOldStop = this.stop;
+    this.start = this.__startPcPlugin;
+    this.stop = this.__stopPcPlugin;
+  }
 
-    __stopPcPlugin (...args: any[]) {
-      this.__patchAfter();
-      return this.pluginWillUnload(...args);
-    }
-
-    /** Dear dperilo, please consider making typings for this. */
-    private __patchBefore () {
-      this.__pcCompatOldStart = this.start;
-      this.__pcCompatOldStop = this.stop;
-      this.start = this.__startPcPlugin;
-      this.stop = this.__stopPcPlugin;
-    }
-
-    private __patchAfter () {
-      this.start = this.__pcCompatOldStart;
-      this.stop = this.__pcCompatOldStop;
-    }
+  private __patchAfter () {
+    this.start = this.__pcCompatOldStart;
+    this.stop = this.__pcCompatOldStop;
+  }
 }

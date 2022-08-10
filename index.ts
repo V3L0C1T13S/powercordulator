@@ -4,7 +4,6 @@ import { Plugin } from '@vizality/entities';
 import { join } from 'path';
 import Module from 'module';
 import { rename } from 'fs/promises';
-import Notifications from '@vizality/src/src/api/Notifications';
 import { createProxy } from './createProxy';
 import { ToastInfo } from './types';
 
